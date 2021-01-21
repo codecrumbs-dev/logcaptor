@@ -22,46 +22,38 @@ class WidgetServiceTest {
         logCaptor.clearLogs();
     }
 
-    @Nested
-    class Add {
-
-        @Test
-        void hasDebugLoggingIncludingName() {
-            String name = "My Widget";
-            service.add(Widget.of(name));
-            assertThat(logCaptor.getDebugLogs())
-                    .containsExactly(String.format("Adding widget with name [%s]", name));
-        }
+    @Test
+    void testAdd() {
+        String name = "My Widget";
+        service.add(Widget.of(name));
+        assertThat(logCaptor.getDebugLogs())
+                .containsExactly(String.format("Adding widget with name [%s]", name));
     }
 
-    @Nested
-    class Remove {
+    @Test
+    void testRemove() {
+        int widgetId = 999;
+        service.remove(widgetId);
+        assertThat(logCaptor.getInfoLogs())
+                .containsExactly(String.format("Removing widget with id [%s]", widgetId));
+    }
 
-        @Test
-        void hasInfoLoggingIncludingId() {
-            int widgetId = 999;
-            service.remove(widgetId);
-            assertThat(logCaptor.getInfoLogs())
-                    .containsExactly(String.format("Removing widget with id [%s]", widgetId));
-        }
+    @Test
+    void testRemoveWithIllegalId() {
+        int illegalId = -1;
 
-        @Test
-        void hasErrorLoggingWithExceptionWhereIdIllegal() {
-            int illegalId = -1;
+        assertThatIllegalArgumentException()
+                .isThrownBy(() -> service.remove(illegalId));
 
-            assertThatIllegalArgumentException()
-                    .isThrownBy(() -> service.remove(illegalId));
-
-            List<LogEvent> logEvents = logCaptor.getLogEvents();
-            assertThat(logEvents).hasSize(1);
-            LogEvent onlyEvent = logEvents.get(0);
-            assertThat(onlyEvent.getMessage()).isEqualTo("Error removing widget");
-            assertThat(onlyEvent.getLevel()).isEqualTo("ERROR");
-            assertThat(onlyEvent.getThrowable())
-                    .isPresent()
-                    .get(as(InstanceOfAssertFactories.THROWABLE))
-                    .hasMessage(String.format("Widget id must be greater than 0 but was [%s]", illegalId))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
+        List<LogEvent> logEvents = logCaptor.getLogEvents();
+        assertThat(logEvents).hasSize(1);
+        LogEvent onlyEvent = logEvents.get(0);
+        assertThat(onlyEvent.getMessage()).isEqualTo("Error removing widget");
+        assertThat(onlyEvent.getLevel()).isEqualTo("ERROR");
+        assertThat(onlyEvent.getThrowable())
+                .isPresent()
+                .get(as(InstanceOfAssertFactories.THROWABLE))
+                .hasMessage(String.format("Widget id must be greater than 0 but was [%s]", illegalId))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }
