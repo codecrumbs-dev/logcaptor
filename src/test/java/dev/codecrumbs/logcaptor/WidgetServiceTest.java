@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.function.Function;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -46,14 +47,17 @@ class WidgetServiceTest {
                 .isThrownBy(() -> service.remove(illegalId));
 
         List<LogEvent> logEvents = logCaptor.getLogEvents();
-        assertThat(logEvents).hasSize(1);
-        LogEvent onlyEvent = logEvents.get(0);
-        assertThat(onlyEvent.getMessage()).isEqualTo("Error removing widget");
-        assertThat(onlyEvent.getLevel()).isEqualTo("ERROR");
-        assertThat(onlyEvent.getThrowable())
-                .isPresent()
-                .get(as(InstanceOfAssertFactories.THROWABLE))
-                .hasMessage(String.format("Widget id must be greater than 0 but was [%s]", illegalId))
-                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(logEvents)
+                .hasOnlyOneElementSatisfying(
+                        event -> {
+                            assertThat(event.getMessage()).isEqualTo("Error removing widget");
+                            assertThat(event.getLevel()).isEqualTo("ERROR");
+                            assertThat(event.getThrowable())
+                                    .isPresent()
+                                    .get(as(InstanceOfAssertFactories.THROWABLE))
+                                    .hasMessage(String.format("Widget id must be greater than 0 but was [%s]", illegalId))
+                                    .isInstanceOf(IllegalArgumentException.class);
+                        }
+                );
     }
 }
